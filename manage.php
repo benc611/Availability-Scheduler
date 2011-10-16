@@ -333,7 +333,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	//--------------
 	//Select only deskies at this desk
 	//--------------
-	$sql = "SELECT pid, name, desired, srank FROM info WHERE desk='" . $desk ."';";
+	$sql = "SELECT pid, name, desired, srank, dub FROM info WHERE desk='" . $desk ."';";
 	$resource = pg_fetch_all(pg_query($sql));
 	foreach($resource as $set) {	//Pull one row at a time from the table
 		//$info[$pid]['type'] = value of type
@@ -341,7 +341,31 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		$info[ $set['pid'] ]['name'] = $set['name']; //User's full name
 		$info[ $set['pid'] ]['desired'] = $set['desired']; //Hours to give this person
 		$info[ $set['pid'] ]['count'] = 0; //Hours given to person
-		//Double shifts okay? set day counter equal to 2.
+		
+		//Sets a number for the day equal to willingness to double shifts
+		//Rank for the day is decreased by one for each shift assigned to that day
+		//A person who said yes will still have a .5 multiplier on rank. Maybe .25, No will have 0 after one shift
+		echo "<br/>" . $set['name'] . " " . $set['dub'] . " ";
+		switch($set['dub'])
+		{
+			case "Yes  ":
+				$dub = 1.5; //Can take two shifts in one day
+				break;
+			case "Maybe":
+				$dub = 1.25; //Willing to take two.
+				break;
+			case "No   ":
+				$dub = 1; //Won't take more than 1
+				break;
+			default:
+				$dub = 0;
+				break;
+		}
+		echo $dub;
+		for($day=0;$day<=6;$day++)
+		{
+			$info[ $set['pid'] ][$day] = $dub;
+		}
 	}
 
 	//--------------
@@ -384,6 +408,10 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	{
 		$day = intval($dayhour/100); //Get the first digit of dayhour
 		$hour = $dayhour%100;	//Get the second and third digit of dayhour
+		
+		//--------------
+		//Rank person's ability to cover
+		//--------------
 		foreach ($info as $pid => $value){ //Each $pid of deskie in this desk
 			$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . $hour . ";";
 			$shift_rank1 = pg_fetch_result(pg_query($sql),0,0); //Gets the rank of shift for $pid
@@ -403,7 +431,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 			$rating = 300*$shift_rank; //Makes the shift rank a three digit number, like srank, and weighted to only have class or org result negative
 			$rating = $rating - $info[$pid]['srank']; //weighted shift rank - average. Higher is best choice. Negative is do not rank
 			$rating = ($info[$pid]['desired']-$info[$pid]['count'])*$rating; //Desired, minus given. Remaining desired factors into rating.
-			//Some sort of factor eliminating double shifts
+			$rating = $rating*$info[$pid][$day];
 			$ranking[$pid] = $rating;
 		}
 
@@ -423,7 +451,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 			$schedule[$day][($hour+1)] = $pid; //Two hour blocks
 //			echo "Yay. We covered day:" . $day . " hour:" . $hour . " with pid:" . $pid . ". Isn't that swell?";
 			$info[$pid]['count']+=2; //Increase count of given hours by 2
-			
+			$info[$pid][$day]--; //Decrement dub counter
 		}
 
 		else{
