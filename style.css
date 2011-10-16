@@ -1,26 +1,46 @@
 
-p{font-family:Arial, Geneva, sans-serif;}
+p{
+	font-family:Arial, Geneva, sans-serif;
+}
 
-td.centered {
-text-align: center
+td.center {
+	text-align: center
 }
 
 .rank3 {
-background-color: #a0ba42; 
+	background-color: #a0ba42; 
 }
+
 .rank2 {
-background-color: #ffce00; 
+	background-color: #ffce00; 
 }
+
 .rank1 {
-background-color: #860e25; 
+	background-color: #860e25; 
 }
+
 .rankc {
-background-color: #beb69f;
+	background-color: #beb69f;
 }
+
 .ranko {
-background-color: #9fa0a3; 
+	background-color: #9fa0a3; 
 }
 
 .posAC {
-background-color: #9fa0a3;
+	background-color: #9fa0a3;
+}
+
+#shift_ranks {
+	position:relative;
+	left:20px
+}
+
+.table1 {
+	float:left;
+}
+
+.table2 {
+	position:relative;
+	left:50px
 }

@@ -29,7 +29,7 @@ if (!$con)
 		<option value="GenerateAvail">Generate Master Availability Sheet</option>
 		<option value="GenerateCSV">Export to CSV</option>
 		<option value="place">Place at Desks</option>
-		<option value="schedule">Schedule Deskies. Non functional</option>
+		<option value="schedule">Schedule Deskies</option>
 		<option value="ClearDB">Clear Database</option>
 		<option value="test">Test purposes only</option>
 	</select>
@@ -177,11 +177,24 @@ if ( isset($_SESSION['option']) ) {
 			break;
 
 		case "schedule":
-			$desk = "d"; //Get desk choice from user in the future
-			schedule_desk($desk);
-			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
+			?>
+			<form action="manage.php" method="get">
+			<input type = "submit" name="option" value="Schedule Wads">
+			<input type = "submit" name="option" value="Schedule DHH">
+			<input type = "submit" name="option" value="Schedule McNair">
+			</form> 
+			<?php
 		break;
-
+		
+		case "Schedule Wads":
+			schedule_desk("w");
+			break;
+		case "Schedule McNair":
+			schedule_desk("m");
+			break;
+		case "Schedule DHH":
+			schedule_desk("d");
+			break;
 		default: echo "Option Error";
 	}
 
@@ -345,7 +358,6 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		//Sets a number for the day equal to willingness to double shifts
 		//Rank for the day is decreased by one for each shift assigned to that day
 		//A person who said yes will still have a .5 multiplier on rank. Maybe .25, No will have 0 after one shift
-		echo "<br/>" . $set['name'] . " " . $set['dub'] . " ";
 		switch($set['dub'])
 		{
 			case "Yes  ":
@@ -358,10 +370,9 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 				$dub = 1; //Won't take more than 1
 				break;
 			default:
-				$dub = 0;
+				echo "Scheduler error";
 				break;
 		}
-		echo $dub;
 		for($day=0;$day<=6;$day++)
 		{
 			$info[ $set['pid'] ][$day] = $dub;
@@ -444,7 +455,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		reset($ranking); //Put pointer at beginning of the array
 		$pid = key($ranking);	//Get the key of the first element (the pid of the highest ranked person)
 
-		global $days;
+		global $days; //translates day number to word
 
 		if ($ranking[$pid] > 0){	//If the best result isn't less than zero, give it to them
 			$schedule[$day][$hour] = $pid;
@@ -455,7 +466,30 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		}
 
 		else{
-			echo "Couldn't cover " . $days[$day] . " at " . $hour . ":00<br/>";
+			echo "Couldn't cover " . $days[$day] . " at " . $hour . ":00<br/>";?>
+			<div id="shift_ranks">
+				<table class="table1">
+				<?php
+				echo "\n<tr><td>Ranks</td><td>" . $days[$day] . " " . $hour . "</td></tr>\n";
+				foreach($ranking as $pid => $value)
+				{
+					$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . $hour . ";";
+					$person_rank =  pg_fetch_result(pg_query($sql),0,0);
+					echo "<tr><td>" . $info[$pid]['name'] .  "</td><td class=\"center\">" . $person_rank . "</td></tr>\n";
+				}?>
+				</table>
+				<table class="table2">
+				<?php
+				echo "\n<tr><td>Ranks</td><td>" . $days[$day] . " " . ($hour+1) . "</td></tr>\n";
+				foreach($ranking as $pid => $value)
+				{
+					$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . ($hour+1) . ";";
+					$person_rank =  pg_fetch_result(pg_query($sql),0,0);
+					echo "<tr><td>" . $info[$pid]['name'] .  "</td><td class=\"center\">" . $person_rank . "</td></tr>\n";
+				}?>
+				</table>
+			</div>
+		<?php
 		}
 
 //		print_r($ranking); echo "<br/> \n";
@@ -496,7 +530,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	echo "</table>\n<table>\n<tr><th>Name</th><th>Shifts Given</th><th>Shifts Desired</th></tr>\n";
 	foreach($info as $array)
 	{
-			echo "<tr><td>" . $array['name'] . "</td><td class=\"centered\">" .  $array['count'] . "</td><td class=\"centered\">" . $array['desired'] . "</td></tr>\n";
+			echo "<tr><td>" . $array['name'] . "</td><td class=\"center\">" .  $array['count'] . "</td><td class=\"center\">" . $array['desired'] . "</td></tr>\n";
 	}
 	
 
