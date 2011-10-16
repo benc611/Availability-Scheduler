@@ -5,7 +5,7 @@
 <link rel="stylesheet" type="text/css" href="style.css" />
 
 <script type="text/javascript">
-function handlerTextChange(textbox){ 
+function handlerTextChange(textbox){ //Changes textbox color based on input value
 if (textbox.value == 3) textbox.style.background = '#a0ba42';
 else if (textbox.value == 2) textbox.style.background = '#ffce00';
 else if (textbox.value == 1) textbox.style.background = '#860e25';
@@ -13,6 +13,40 @@ else if (textbox.value.toLowerCase() == "o") textbox.style.background = '#9fa0a3
 else if (textbox.value.toLowerCase() == "c") textbox.style.background = '#beb69f';
 else textbox.style.background = '#fff';
 }
+
+function validateForm() //Validates all input to make sure it is valid
+{
+	var username=document.submit.username.value;
+	if (username==null || username==""){
+		alert("Please fill out username");
+		return false;
+	}
+	var name=document.submit.name.value;
+	if (name==null || name==""){
+		alert("Please fill out name");
+		return false;
+	}
+	var desired=document.submit.desired.value; //Also checked by html5
+	if (desired==null || desired=="" || desired > 14 || desired < 0 ){
+		alert("Please input a number between 0 and 14");
+		return false;
+	}
+
+	for (hour=8;hour<=21;hour++)
+	{
+		for (day=0;day<=6;day++)
+		{
+			hour_name = "hours[" + day + "][" + hour + "]";
+			if(!(document.forms["submit"][hour_name].value == "x" || document.forms["submit"][hour_name].value == "c" || document.forms["submit"][hour_name].value == "o" || document.forms["submit"][hour_name].value == "1" || document.forms["submit"][hour_name].value == "2" || document.forms["submit"][hour_name].value == "3")){
+				alert("Please make sure all hours preferences are either c, x, o, or an integer 1 through 3");
+				return false;
+			}
+		}
+	}
+	
+	return true;
+}
+
 </script>
 </head>
 
@@ -48,7 +82,7 @@ if (pg_num_rows($result))
 	You may edit your information and hours below.
 
 	<?php
-
+	$username = $user_check;
 	//Select based on username. Stores all info into array $info
 	$sql = "SELECT * FROM info WHERE username='" . $username . "';";
 	$resource = pg_query($sql);
@@ -59,7 +93,7 @@ if (pg_num_rows($result))
 
 	//Write form. Default = variable option
 	?>
-	<form action="submit.php" method="post" autocomplete="on">
+	<form name="submit" action="submit.php" onsubmit="return validateForm()" method="post" autocomplete="on">
 		<table> <?php /*User information*/?>
 		<tr><td>Username: </td> <td><input type="text" name="username" value="<?php echo $info['username']; ?>" autofocus="autofocus" /></td></tr>
 
@@ -95,7 +129,7 @@ if (pg_num_rows($result))
 
 		<tr><td>Hours desired: </td>
 		<td>
-		<input type="number" name="desired" min="2" max="12" value="<?php echo $info['desired'];?>"/> <br />
+		<input type="number" name="desired" min="0" max="14" value="<?php echo $info['desired'];?>"/> <br />
 		</td>
 		</tr>
 
@@ -167,7 +201,7 @@ else{
 	<br />
 	You haven't yet submitted your schedule and preferences yet. <br />
 	Please input your information below <br /> <br />
-	<form action="submit.php" method="post" autocomplete="on">
+	<form name="submit" action="submit.php" onsubmit="return validateForm()" method="post" autocomplete="on">
 		<table> <?php /*User information*/ ?>
 		<tr><td>Username: </td> <td><input type="text" name="username" value=<?php echo $_POST['user_check'] ?> autofocus="autofocus" /></td></tr>
 
@@ -203,7 +237,7 @@ else{
 
 		<tr><td>Hours desired: </td>
 		<td>
-		<input type="number" name="desired" min="2" max="12" value="8"/> <br />
+		<input type="number" name="desired" min="0" max="14" value="8"/> <br />
 		</td>
 		</tr>
 		<tr><td>

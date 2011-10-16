@@ -13,19 +13,24 @@ if (!$con)
 	die("Could not connect: " .  pg_last_error());
 }
 
-//destroy variables at end to disallow refresh
-
-if (!isset($_REQUEST['username'], $_REQUEST['name'], $_REQUEST['desired']) || $_REQUEST['name']=="" || $_REQUEST['username']=="") 
-echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again.';
-
-else{
-$username = pg_escape_string($_REQUEST['username']);
+if ( !isset($_REQUEST['username'], $_REQUEST['name']) || $_REQUEST['name']=="" || $_REQUEST['username']=="" ) 
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE1';
+else if ( !($_REQUEST['position'] == "DR" || $_REQUEST['position'] == "AC") )
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE2';
+else if( !($_REQUEST['desired']<14 && $_REQUEST['desired']>0) )
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE3';
+else if( !($_REQUEST['splitshift']=="Yes" || $_REQUEST['splitshift']=="Maybe" || $_REQUEST['splitshift']=="No") )
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE4';
+else if( !($_REQUEST['dubshift']=="Yes" || $_REQUEST['dubshift']=="Maybe" || $_REQUEST['dubshift']=="No") )
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE5';
+else{ //everything validates
+$username = pg_escape_string($_REQUEST['username']); 
 $name = pg_escape_string($_REQUEST['name']);
-$position = pg_escape_string($_REQUEST['position']);
-$desired = pg_escape_string($_REQUEST['desired']);
-$splitshift = pg_escape_string($_REQUEST['splitshift']);
-$dubshift = pg_escape_string($_REQUEST['dubshift']);
-$hours = $_REQUEST['hours'];
+$position = $_REQUEST['position']; //No escape due to constrictions on input validated above
+$desired = $_REQUEST['desired']; //No escape due to constrictions on input validated above
+$splitshift = $_REQUEST['splitshift']; //No escape due to constrictions on input validated above
+$dubshift = $_REQUEST['dubshift']; //No escape due to constrictions on input validated above
+$hours = $_REQUEST['hours']; //Tested if equal to values when updating/creating entries later
 $submit = $_REQUEST['submit'];
 /*Just for testing
 ?>
