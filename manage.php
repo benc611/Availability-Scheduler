@@ -63,15 +63,51 @@ if ( isset($_SESSION['option']) ) {
 		case "Clear": //Confirmed clear
 			pg_query('DELETE FROM hours; DELETE FROM info');
 			echo "It's all gone now. It's kind of lonely in here...<br/>";
-			unset($_POST['Button2']);
+			unset($_SESSION['option']);
 			break;
+
+		case "Delete":
+			$pid = $_REQUEST['DeleteUserID'];
+			$sql = "DELETE FROM info WHERE pid = '" . $pid . "';";
+			$sql .= "DELETE FROM hours WHERE pid = '" . $pid . "';";
+			pg_query($sql);
+			echo "Deleted user<br/><br/>";
+			$_SESSION['option'] = "ListUsers";
+			//No break so that it will load users next
 
 		case "ListUsers": //Lists all info in the info table
 				$sql = 'SELECT * from info;';
-				print_select($sql);
+				$resource = pg_fetch_all(pg_query($sql));
+
+				//Print headers
+				echo "<table border='1'><tr>";
+				$keys = array_keys($resource[0]);
+				foreach ($keys as $value){
+					echo "<th>" . $value . "</th>";
+				}
+				echo "</tr>\n";
+				
+				//Print data
+				foreach($resource as $array){
+					echo "<tr>";
+					foreach($array as $value){
+						echo "<td>" . $value . "</td>";
+					}
+					echo "<td>"; 
+					?>
+					
+					<form action="manage.php" method="post">
+					<input type="hidden" name="DeleteUserID" value="<?php echo $array['pid'];?>">
+					<input type="submit" name="option" value="Delete">
+					</form>
+
+					<?php
+					echo "</tr>\n";
+				}
+				echo "</table>\n";
+
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
-
 		case "GenerateAvail":
 			if (isset($_REQUEST['DeskEdit']) ){ //Need a better way to implement this than posting back and checking
 				$desk = $_REQUEST['desk']; //array $desk[$pid] = desk preference
@@ -196,24 +232,6 @@ if ( isset($_SESSION['option']) ) {
 			schedule_desk("d");
 			break;
 		default: echo "Option Error";
-	}
-
-}
-
-function print_select($sql) //Fix this up a bit soon.. foreach and whatnot
-{
-	$resource = pg_query($sql);
-	echo "<table border=1>\n<tr>";
-
-	//Print headers
-	for ($field=0; $field<pg_num_fields($resource); $field++)
-		echo "	<th>" . pg_field_name($resource, $field) . "</th>\n";
-
-	for ($row=0; $row<pg_num_rows($resource); $row++){ //Loops per row from database
-		echo "</tr>\n<tr>\n";
-		$set = pg_fetch_array($resource); //Store next row into array $set
-		for ($field=0; $field<pg_num_fields($resource); $field++) //Loops per column per row
-			echo "	<td>" . $set[$field] . "</td>\n";
 	}
 
 }
@@ -527,7 +545,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		}
 		echo "</tr>";
 	}
-	echo "</table>\n<table>\n<tr><th>Name</th><th>Shifts Given</th><th>Shifts Desired</th></tr>\n";
+	echo "</table>\n<table>\n<tr><th>Name</th><th>Hours Given</th><th>Hours Desired</th></tr>\n";
 	foreach($info as $array)
 	{
 			echo "<tr><td>" . $array['name'] . "</td><td class=\"center\">" .  $array['count'] . "</td><td class=\"center\">" . $array['desired'] . "</td></tr>\n";
