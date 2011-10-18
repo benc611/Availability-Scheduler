@@ -27,13 +27,12 @@ if (!$con)
 		<option value="ListUsers">List Users</option>
 		<option value="score">Generate Availibility Ranks</option>
 		<option value="GenerateAvail">Generate Master Availability Sheet</option>
-		<option value="GenerateCSV">Export to CSV</option>
 		<option value="place">Place at Desks</option>
 		<option value="schedule">Schedule Deskies</option>
 		<option value="ClearDB">Clear Database</option>
 		<option value="test">Test purposes only</option>
 	</select>
-	<br /><input type = "submit" value="Submit"/>
+	<input type = "submit" value="Submit"/>
 </form>
 <?php
 
@@ -118,12 +117,35 @@ if ( isset($_SESSION['option']) ) {
 				}
 				unset($_REQUEST['DeskEdit']); //Don't edit the desk again on a new page load.
 			}
-			hours_array();
-			info_array(); 
-			desk_sort(); //Sorts the array $info by desk. Need a new sort method
+			$hours = hours_array();
+			$info = desk_sort( info_array() ); //Sorts the array $info by desk. Need a new sort method
 
-			
+			//-----------------
+			//Generate CSV
+			//-----------------
+			$file_location = "files/master.csv"; //Location to save the file to
+			$file = fopen($file_location,"w");
+			fwrite($file, ',,,');
+			foreach($days as $value) {
+				fwrite($file, '"' . $value . '",');
+			}
+			fwrite($file, "\nOpening,Name,Desk,\n");
+			for($hour=8;$hour<=21;$hour++) { //Loop from 8:00 to 21:00
+				foreach ($info as $pid=>$value) { 	//Pull rows from $info (to access pid name and desk
+					fwrite($file, $hour . '-' . ($hour+1) . ','); //Write the shift label for each row
+					fwrite($file, $info[$pid]['name'] . ',' . $desks[$info[$pid]['desk']] . ','); //Name and desk (using the value of desk from info as the index of desks)
+					for($day=0;$day<=6;$day++) { //Loop Sunday (0) through Saturday (6)
+						fwrite($file, $hours[intval($pid)][$day][$hour] . ',');
+					}
+					fwrite($file, "\n");
+				}
+			}
+			fclose($file);
+			echo "<a href=" . $file_location . ">Download CSV</a>"; //Offers the link for download
+
+			//-----------------
 			//Create the tables
+			//-----------------
 			?><table> <?php /*this table holds both the left and right tables*/?>
 			<tr><td>
 			<table border=1> <?php /*This table holds the master list*/?>
@@ -163,50 +185,18 @@ if ( isset($_SESSION['option']) ) {
 			</td></tr></table> <?php /*End table with desk and user info*/?>
 			<input type = "submit" name="DeskEdit" value="Submit">
 			</form>
-			</table><?php /*End master table*/?>
-			<?php
+			</table><?php //End master table
 			break;
-
-		case "GenerateCSV": //Similar functionality to Master. Outputs to a csv file and offers a link
-			//Uses a new line to seperate lines, a comma to seperate cells, " " for text
-			hours_array();
-			info_array();
-			desk_sort();
-
-			$file_location = "files/master.csv"; //Location to save the file to
-			$file = fopen($file_location,"w");
-			fwrite($file, ',,,');
-			foreach($days as $value) {
-				fwrite($file, '"' . $value . '",');
-			}
-			fwrite($file, "\nOpening,Name,Desk,\n");
-			for($hour=8;$hour<=21;$hour++) { //Loop from 8:00 to 21:00
-				foreach ($info as $pid=>$value) { 	//Pull rows from $info (to access pid name and desk
-					fwrite($file, $hour . '-' . ($hour+1) . ','); //Write the shift label for each row
-					fwrite($file, $info[$pid]['name'] . ',' . $desks[$info[$pid]['desk']] . ','); //Name and desk (using the value of desk from info as the index of desks)
-					for($day=0;$day<=6;$day++) { //Loop Sunday (0) through Saturday (6)
-						fwrite($file, $hours[intval($pid)][$day][$hour] . ',');
-					}
-					fwrite($file, "\n");
-				}
-			}
-			fclose($file);
-			echo "<a href=" . $file_location . ">Download CSV</a>"; //Offers the link for download
-			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
-			break;
-
 
 		case "score":
-			hours_array(); //Populate $hours array with info from hours table $hours[pid][day][hour]
-			average_rank($hours); //Gather the average rank for each user and store it in the info table
+			average_rank(); //Gather the average rank for each user and store it in the info table
 			echo "<br/>Scheduling Scores have been updated.<br/>";
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
 
 		case "place":
-			//hours_info_array(); //Deprecated. Check that everything works correctly first, before removing..
-			hours_array();
-			info_array();
+			average_rank();
+			$info = info_array();
 			desk_place($info);
 			echo "<br/>Deskies have been placed.<br/>";
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
@@ -238,8 +228,9 @@ if ( isset($_SESSION['option']) ) {
 
 //Pass the the array holding ranks, with the format pid|day|hour|rank
 //Adds up the total ranks and divides by the total number of shifts, to give an average rank
-function average_rank($hours)
+function average_rank()
 {
+	$hours = hours_array();
 	foreach($hours as $pid=>$array1){
 		$totalrank = 0;
 		$shifts = 0;
@@ -287,7 +278,6 @@ function hours_info_array()
 //Generates an array $hours with the format hours[pid][day][hour] = rank
 function hours_array()
 {
-	global $hours;  //Make sure the array is available globally
 	$sql = "SELECT DISTINCT pid FROM info"; //Get the list of PIDs in the info table
 	$p_array = pg_fetch_all_columns(pg_query($sql), 0);
 	foreach ($p_array as $pid){
@@ -299,6 +289,7 @@ function hours_array()
 			}
 		}
 	}
+	return $hours;
 }
 
 //Generates a table with the format info[pid][info column] = value
@@ -311,19 +302,19 @@ function info_array()
 	for ($row=pg_num_rows($resource);$row>0;$row--){ //Loops each row of info (each PID)
 		$set = pg_fetch_array($resource);
 		$pid = $set['pid'];	//Makes for nicer looking code in the next few lines
-		$info[$pid . " "]['name'] = $set['name'];
+		$info[$pid . " "]['name'] = $set['name']; //Space makes it sortable with multisort. Otherwise numberic indices are reindexed.
 		$info[$pid . " "]['desk'] = $set['desk'];
 		$info[$pid . " "]['position']=$set['position'];
 		$info[$pid . " "]['srank'] = $set['srank'];
 		//If other info columns are desired, add them here like the above lines
 	}
+	return $info;
 }
 
 
 //Sorts by desk
-function desk_sort()
-{
-	global $info;
+function desk_sort($info)
+{	//Fix info_array() hack if this is ever fixed to not need the hack
 
 	//Pull out array $desk_ar from $info. Column of desks.
 	foreach ($info as $key => $row) {
@@ -331,6 +322,7 @@ function desk_sort()
 	}
 
 	array_multisort($desk_ar, $info);
+	return $info;
 }
 
 //Places deskies at a desk based on their average rank starting high to low
@@ -348,19 +340,18 @@ function desk_place($info)
 	reset($info);
 	foreach($info as $pid=>$row){
 		if($info[$pid]['position'] == "DR"){
-			echo $pid . "<br/>";
 			$sql = "UPDATE info SET desk ='" . $desks[$count%3] . "' WHERE pid='" . intval($pid) . "'";
 			pg_query($sql);
 			$count++;
 		}
 	}
-	echo "<br/>Placed at desks.<br/>";
 }
 
 
 
 function schedule_desk($desk) //Takes input $desk, for which desk to schedule, and attempts to generate a schedule
 {
+	average_rank();
 	//--------------
 	//Select only deskies at this desk
 	//--------------
@@ -401,8 +392,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	//Rank shifts by difficulty to cover
 	//--------------
 	for($day=0;$day<=6;$day++){
-//		for ($hour=8;$hour<=21;$hour++){
-		for ($hour=8;$hour<=20;$hour+=2){ //2 hour blocks
+		for ($hour=10;$hour<=20;$hour+=2){ //2 hour blocks
 			$totalrank = 0;
 			$shifts = 0;
 			foreach ($info as $pid => $value){ //Each $pid of deskie in this desk
@@ -531,7 +521,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		echo "<th>" . $value . "</th>";
 	}
 	echo "</tr>";
-	for($hour=8;$hour<=21;$hour++){
+	for($hour=10;$hour<=21;$hour++){
 		echo "<tr><td>" . $hour . "</td>";
 		for($day=0;$day<=6;$day++){
 			if ( isset($schedule[$day][$hour]) ){
@@ -563,7 +553,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 			fwrite($file, $value . ",");
 		}
 		fwrite($file, "\n");
-		for($hour=8;$hour<=21;$hour++){
+		for($hour=10;$hour<=21;$hour++){
 			fwrite($file, $hour . ",");
 			for($day=0;$day<=6;$day++){
 				if ( isset($schedule[$day][$hour]) ){
