@@ -426,7 +426,6 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 			$difficulty[$dayhour] = $average;
 		}
 	}
-	flush();
 	asort($difficulty); //Sort from lowest rank to highest
 	//$dayhour/100 = $day  $dayhour%100 = $hour
 
@@ -545,13 +544,43 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		}
 		echo "</tr>";
 	}
-	echo "</table>\n<table>\n<tr><th>Name</th><th>Hours Given</th><th>Hours Desired</th></tr>\n";
+	echo "</table>\n";
+	echo "<div class=\"hours_table\"><table>\n<tr><th>Name</th><th>Hours Given</th><th>Hours Desired</th></tr>\n";
 	foreach($info as $array)
 	{
 			echo "<tr><td>" . $array['name'] . "</td><td class=\"center\">" .  $array['count'] . "</td><td class=\"center\">" . $array['desired'] . "</td></tr>\n";
 	}
-	
-
+	echo "</table></div>";
+	//--------------
+	//Write to CSV
+	//--------------	
+	$file_location = "files/" . $desk . "_schedule.csv"; //Location to save the file to
+	$file = fopen($file_location,"w");
+	fwrite($file, "Opening,");
+		
+	foreach ($days as $value)
+		{
+			fwrite($file, $value . ",");
+		}
+		fwrite($file, "\n");
+		for($hour=8;$hour<=21;$hour++){
+			fwrite($file, $hour . ",");
+			for($day=0;$day<=6;$day++){
+				if ( isset($schedule[$day][$hour]) ){
+					fwrite($file, $info[ $schedule[$day][$hour] ]['name'] . ",");
+				}
+				else
+					fwrite($file, "----,");
+			}
+			fwrite($file, "\n");
+		}
+		fwrite($file, "\n\n\nName,Hours Given,Hours Desired\n");
+		foreach($info as $array)
+		{
+			fwrite($file, $array['name'] . "," . $array['count'] . "," . $array['desired'] . "\n");	
+		}
+	fclose($file);
+	echo "<div class\"down_link\"><a href=" . $file_location . ">Download CSV</a></div>"; //Offers the link for download
 }//end function
 
 ?>
