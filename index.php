@@ -9,8 +9,16 @@ function handlerTextChange(textbox){ //Changes textbox color based on input valu
 if (textbox.value == 3) textbox.style.background = '#a0ba42';
 else if (textbox.value == 2) textbox.style.background = '#ffce00';
 else if (textbox.value == 1) textbox.style.background = '#860e25';
-else if (textbox.value.toLowerCase() == "o") textbox.style.background = '#9fa0a3';
-else if (textbox.value.toLowerCase() == "c") textbox.style.background = '#beb69f';
+else if (textbox.value.toLowerCase() == "o") 
+{
+textbox.style.background = '#9fa0a3';
+textbox.value = textbox.value.toLowerCase();
+}
+else if (textbox.value.toLowerCase() == "c") 
+{
+textbox.style.background = '#beb69f';
+textbox.value = textbox.value.toLowerCase();
+}
 else textbox.style.background = '#fff';
 }
 
@@ -27,8 +35,8 @@ function validateForm() //Validates all input to make sure it is valid
 		return false;
 	}
 	var desired=document.submit.desired.value; //Also checked by html5
-	if (desired==null || desired=="" || desired > 14 || desired < 0 ){
-		alert("Please input a number between 0 and 14");
+	if (desired==null || desired=="" || desired > 10 || desired < 0 || desired%2){
+		alert("Please input an even number between 0 and 10");
 		return false;
 	}
 
@@ -156,6 +164,7 @@ if (pg_num_rows($result))
 
 	//This generates the table for selecting hours preferences
 		//$days = array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+		echo "<table border=\"1\"><tr><td>c = Scheduled Class</td><td>o = Scheduled organization meeting</td><td>1 = Available, not preferred</td><td> 2 = Available, would like shift</td> <td>3 = Best</td></tr></table>";
 		echo '<table border="1">
 			<tr>
 				<th></th>
@@ -245,10 +254,11 @@ else{
 		</table>
 		<input type = "submit" name="submit" value="Create"/>
 
-	Hours Key: 3 = Preferred. 2 = Not Preferred. 1 = Least Preferred. c = Class. o = Organization
 	<?php
 		//This generates the table for selecting hours preferences
 		//$days = array("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+		echo "<table border=\"1\"><tr><td>c = Scheduled Class</td><td>o = Scheduled organization meeting</td><td>1 = Available, not preferred</td><td> 2 = Available, would like shift</td> <td>3 = Best</td></tr></table>";
+
 		echo '<table border="1">
 			<tr>
 				<th></th>
