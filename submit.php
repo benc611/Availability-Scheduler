@@ -18,19 +18,19 @@ $file = fopen($file_location,"a");
 
 if ( !isset($_REQUEST['username'], $_REQUEST['name']) || $_REQUEST['name']=="" || $_REQUEST['username']=="" )
 {
-	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE1';
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE1. Missing name or username';
 	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));
 	fwrite($file, "\n=========================");
-	fwrite($file, "\nError code: SE1\n");
+	fwrite($file, "\nError code: SE1. Missing name or username\n");
 	fwrite($file, "\nUN:" . $_REQUEST['username'] . " N:" .  $_REQUEST['name'] . " Pos:" . $_REQUEST['position'] . " Desired:" . $_REQUEST['desired']);
 	fwrite($file, "\nSplit:" . $_REQUEST['splitshift'] . " Dub:" . $_REQUEST['dubshift']);
 	fwrite($file, "\n\n\n");
 }
 else if ( !($_REQUEST['position'] == "DR" || $_REQUEST['position'] == "AC") )
 {
-	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE2';
+	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE2. ';
 	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));

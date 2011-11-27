@@ -9,7 +9,7 @@
 <?php
 
 include 'connect.php'; //contains the values of the variables $host $dbname $user and $password
-
+echo microtime();
 global $days, $desks;
 $days = array(0 => "Sunday" , 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday"); //Translates day # to name
 $desks = array(" " => " ", "d" => "DHH", "w" => "Wads", "m" => "McNair"); //Translates single letter to Desk name
@@ -230,7 +230,15 @@ if ( isset($_SESSION['option']) ) {
 //Adds up the total ranks and divides by the total number of shifts, to give an average rank
 function average_rank()
 {
-	$hours = hours_array();
+	$sql = "SELECT pid, 100*sum(CASE WHEN rank ~ '[a-z]' THEN 0 ELSE rank::integer END)/count(rank) as average FROM hours GROUP BY pid";
+	$resource =  pg_query($sql);
+	
+	while (	$array = pg_fetch_object($resource) ) 
+	{
+			$sql = "UPDATE info SET srank ='" . $array->average . "' WHERE pid='" . $array->pid . "'";
+			pg_query($sql);
+	}
+/*	$hours = hours_array();
 	foreach($hours as $pid=>$array1){
 		$totalrank = 0;
 		$shifts = 0;
@@ -241,9 +249,12 @@ function average_rank()
 			}
 		}
 		$average = intval(100*$totalrank/$shifts);
-		$sql = "UPDATE info SET srank ='" . $average . "' WHERE pid='" . $pid . "'";
-		pg_query($sql);
+
+
+
 	}
+*/
+
 }
 
 
@@ -572,7 +583,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	fclose($file);
 	echo "<div class\"down_link\"><a href=" . $file_location . ">Download CSV</a></div>"; //Offers the link for download
 }//end function
-
+echo microtime();
 ?>
 </body>
 </html>

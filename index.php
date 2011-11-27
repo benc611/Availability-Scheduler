@@ -6,32 +6,41 @@
 
 <script type="text/javascript">
 function handlerTextChange(textbox){ //Changes textbox color based on input value
-if (textbox.value == 3) textbox.style.background = '#a0ba42';
-else if (textbox.value == 2) textbox.style.background = '#ffce00';
-else if (textbox.value == 1) textbox.style.background = '#860e25';
-else if (textbox.value.toLowerCase() == "o") 
-{
-textbox.style.background = '#9fa0a3';
-textbox.value = textbox.value.toLowerCase();
-}
-else if (textbox.value.toLowerCase() == "c") 
-{
-textbox.style.background = '#beb69f';
-textbox.value = textbox.value.toLowerCase();
-}
-else textbox.style.background = '#fff';
+	if (textbox.value == 3) textbox.style.background = '#a0ba42';
+	else if (textbox.value == 2) textbox.style.background = '#ffce00';
+	else if (textbox.value == 1) textbox.style.background = '#860e25';
+	else if (textbox.value.toLowerCase() == "o") 
+	{
+		textbox.style.background = '#9fa0a3';
+		textbox.value = textbox.value.toLowerCase();
+	}
+	else if (textbox.value.toLowerCase() == "c") 
+	{
+		textbox.style.background = '#beb69f';
+		textbox.value = textbox.value.toLowerCase();
+	}
+	else textbox.style.background = '#fff';
 }
 
 function validateForm() //Validates all input to make sure it is valid
 {
+
+	document.submit.username.value = document.submit.username.value.replace(/^\s*/, "").replace(/\s*$/, "");
+	document.submit.name.value = document.submit.name.value.replace(/^\s*/, "").replace(/\s*$/, "");
+
 	var username=document.submit.username.value;
 	if (username==null || username==""){
 		alert("Please fill out username");
 		return false;
 	}
+	
+
+
+
 	var name=document.submit.name.value;
-	if (name==null || name==""){
-		alert("Please fill out name");
+
+	if (name==null || name=="" || (name.search(/[a-zA-z]{1,}\s[a-zA-z]{1,}/) == -1)  ){
+		alert("Please fill out first and last name");
 		return false;
 	}
 	var desired=document.submit.desired.value; //Also checked by html5
@@ -52,6 +61,7 @@ function validateForm() //Validates all input to make sure it is valid
 		}
 	}
 	
+document.submit.submit();
 	return true;
 }
 
@@ -210,7 +220,7 @@ else{
 	<br />
 	You haven't yet submitted your schedule and preferences yet. <br />
 	Please input your information below <br /> <br />
-	<form name="submit" action="submit.php" onsubmit="return validateForm()" method="post" autocomplete="on">
+	<form name="submit" action="submit.php" onsubmit="return validateForm(); return false;" method="post" autocomplete="on">
 		<table> <?php /*User information*/ ?>
 		<tr><td>Username: </td> <td><input type="text" name="username" value=<?php echo $_POST['user_check'] ?> autofocus="autofocus" /></td></tr>
 
