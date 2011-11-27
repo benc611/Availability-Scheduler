@@ -9,7 +9,8 @@
 <?php
 
 include 'connect.php'; //contains the values of the variables $host $dbname $user and $password
-echo microtime();
+
+
 global $days, $desks;
 $days = array(0 => "Sunday" , 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday"); //Translates day # to name
 $desks = array(" " => " ", "d" => "DHH", "w" => "Wads", "m" => "McNair"); //Translates single letter to Desk name
@@ -22,7 +23,7 @@ if (!$con)
 
 ?>
 
-<form action="manage.php" method="post">
+<form action="?" method="post">
 	<select name="option">
 		<option value="ListUsers">List Users</option>
 		<option value="score">Generate Availibility Ranks</option>
@@ -43,6 +44,11 @@ if ( isset($_SESSION['option']) ) {
 	switch ($_SESSION['option'])
 	{
 		case "test":
+			$sql = "SELECT * from info ORDER BY desk, name";
+			$resource = pg_query($sql);
+			while (	$array = pg_fetch_object($resource) ) {
+				echo $array->pid . "<br/>";
+			}
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
 
@@ -118,34 +124,11 @@ if ( isset($_SESSION['option']) ) {
 				unset($_REQUEST['DeskEdit']); //Don't edit the desk again on a new page load.
 			}
 			$hours = hours_array();
-			$info = desk_sort( info_array() ); //Sorts the array $info by desk. Need a new sort method
-
-			//-----------------
-			//Generate CSV
-			//-----------------
-			$file_location = "files/master.csv"; //Location to save the file to
-			$file = fopen($file_location,"w");
-			fwrite($file, ',,,');
-			foreach($days as $value) {
-				fwrite($file, '"' . $value . '",');
-			}
-			fwrite($file, "\nOpening,Name,Desk,\n");
-			for($hour=8;$hour<=21;$hour++) { //Loop from 8:00 to 21:00
-				foreach ($info as $pid=>$value) { 	//Pull rows from $info (to access pid name and desk
-					fwrite($file, $hour . '-' . ($hour+1) . ','); //Write the shift label for each row
-					fwrite($file, $info[$pid]['name'] . ',' . $desks[$info[$pid]['desk']] . ','); //Name and desk (using the value of desk from info as the index of desks)
-					for($day=0;$day<=6;$day++) { //Loop Sunday (0) through Saturday (6)
-						fwrite($file, $hours[intval($pid)][$day][$hour] . ',');
-					}
-					fwrite($file, "\n");
-				}
-			}
-			fclose($file);
-			echo "<a href=" . $file_location . ">Download CSV</a>"; //Offers the link for download
-
+			$info = info_array();
 			//-----------------
 			//Create the tables
 			//-----------------
+
 			?><table> <?php /*this table holds both the left and right tables*/?>
 			<tr><td>
 			<table border=1> <?php /*This table holds the master list*/?>
@@ -153,15 +136,18 @@ if ( isset($_SESSION['option']) ) {
 				<tr> <td>Opening</td><td>Name</td><td/><td>Desk</td><td/><td/><td/><td/><td/><td/><td/></tr>
 				<?php
 				for($hour=8;$hour<=21;$hour++) {
+					$sql = "SELECT * from info ORDER BY desk, name";
+					$resource = pg_query($sql);
 					foreach ($info as $pid=>$value) {
 						echo '<tr><td>' . $hour . '-' . ($hour+1) . '</td>';
 						echo '<td class="pos' . $info[$pid]['position']  . '">' . $info[$pid]['name'] . '</td>' . '<td>';
 						echo $info[$pid]['srank'] . '</td>' . '<td>' . $desks[$info[$pid]['desk']] . '</td>';
 						for($day=0;$day<=6;$day++) {
-							echo '<td class="rank' . $hours[intval($pid)][$day][$hour] . '">' . $hours[intval($pid)][$day][$hour] . '</td>';
+							echo '<td class="rank' . $hours[$pid][$day][$hour] . '">' . $hours[$pid][$day][$hour] . '</td>';
 						}
 						echo '</tr>';
 					}
+
 					echo '<tr/><tr/>';
 
 				}?>
@@ -170,13 +156,15 @@ if ( isset($_SESSION['option']) ) {
 
 			<td valign="top"><table border=1> <?php /*Second table. Holds user and desk info*/?>
 			<form action="manage.php" method="post"> <?php /*Form for editing desk placement*/
-				foreach ($info as $pid=>$value) {
-					echo '<tr><td class="pos' . $info[$pid]['position']  . '">' . $info[$pid]['name'] ?> </td>
+				$sql = "SELECT * from info ORDER BY desk, name";
+				$resource = pg_query($sql);
+				while (	$array = pg_fetch_object($resource) ) {
+					echo '<tr><td class="pos' . $array->position  . '">' . $array->name ?> </td>
                                         <td><select name=<?php echo '"desk[' . $pid  . ']"'?>> <br/>
-                                                        <option value="" <?php if($info[$pid]['desk']=="") echo 'selected'?>></option>
-                                                        <option value="d" <?php if($info[$pid]['desk']=="d") echo 'selected'?>>DHH</option>
-                                                        <option value="w" <?php if($info[$pid]['desk']=="w") echo 'selected'?>>Wads</option>
-                                                        <option value="m" <?php if($info[$pid]['desk']=="m") echo 'selected'?>>McNair</option>
+                                                        <option value="" <?php if($array->desk=="") echo 'selected'?>></option>
+                                                        <option value="d" <?php if($array->desk=="d") echo 'selected'?>>DHH</option>
+                                                        <option value="w" <?php if($array->desk=="w") echo 'selected'?>>Wads</option>
+                                                        <option value="m" <?php if($array->desk=="m") echo 'selected'?>>McNair</option>
 
 					</select>
 
@@ -258,33 +246,6 @@ function average_rank()
 }
 
 
-//Deprecated. Use hours_array() and info_array() instead.
-function hours_info_array()
-{
-	global $hours;
-	global $info;
-	$sql = 'SELECT * from info';
-	$resource = pg_query($sql);
-	//This creates two arrays $info[pid][name or desk] and $hours[pid][day][hour]
-	for ($row=pg_num_rows($resource);$row>0;$row--) { //Loops each row of info (each PID)
-		$set = pg_fetch_array($resource); //Stores next row to $set (temp array)
-		$pid = $set['pid'];	//Just because it's annoying to type the array variable name and key
-		$info[$pid . " "]['name'] = $set['name'];
-		$info[$pid . " "]['desk'] = $set['desk'];
-		$info[$pid . " "]['position']=$set['position'];
-		$info[$pid . " "]['srank'] = $set['srank'];
-
-		for ($hour=8; $hour<=21; $hour++) {	//Loops through all hours
-			for ($day=0;$day<=6;$day++) {
-				$sql = 'SELECT rank FROM hours WHERE pid=' . $pid . ' AND day=' . $day . ' AND hour=' . $hour . ';';
-				$resource2 = pg_query($sql);
-				$ranks = pg_fetch_array($resource2);
-				$hours[$pid][$day][$hour] = $ranks['rank'];
-			}
-		}
-	}
-
-}
 
 //Generates an array $hours with the format hours[pid][day][hour] = rank
 function hours_array()
@@ -308,31 +269,17 @@ function hours_array()
 function info_array() 
 {
 	global $info;
-	$sql = 'SELECT * from info';
+	$sql = 'SELECT * from info ORDER BY desk, name';
 	$resource = pg_query($sql);
 	for ($row=pg_num_rows($resource);$row>0;$row--){ //Loops each row of info (each PID)
 		$set = pg_fetch_array($resource);
 		$pid = $set['pid'];	//Makes for nicer looking code in the next few lines
-		$info[$pid . " "]['name'] = $set['name']; //Space makes it sortable with multisort. Otherwise numberic indices are reindexed.
-		$info[$pid . " "]['desk'] = $set['desk'];
-		$info[$pid . " "]['position']=$set['position'];
-		$info[$pid . " "]['srank'] = $set['srank'];
+		$info[$pid]['name'] = $set['name']; 
+		$info[$pid]['desk'] = $set['desk'];
+		$info[$pid]['position']=$set['position'];
+		$info[$pid]['srank'] = $set['srank'];
 		//If other info columns are desired, add them here like the above lines
 	}
-	return $info;
-}
-
-
-//Sorts by desk
-function desk_sort($info)
-{	//Fix info_array() hack if this is ever fixed to not need the hack
-
-	//Pull out array $desk_ar from $info. Column of desks.
-	foreach ($info as $key => $row) {
-		$desk_ar[$key] = $row['desk'];
-	}
-
-	array_multisort($desk_ar, $info);
 	return $info;
 }
 
@@ -583,7 +530,7 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	fclose($file);
 	echo "<div class\"down_link\"><a href=" . $file_location . ">Download CSV</a></div>"; //Offers the link for download
 }//end function
-echo microtime();
+
 ?>
 </body>
 </html>
