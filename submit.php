@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<?php session_start(); ?>
-<html>
-<body>
+<?php session_start(); 
+
+include('header.php');
+
+?>
 
 <?php
 
@@ -19,7 +21,6 @@ $file = fopen($file_location,"a");
 if ( !isset($_REQUEST['username'], $_REQUEST['name']) || $_REQUEST['name']=="" || $_REQUEST['username']=="" )
 {
 	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE1. Missing name or username';
-	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));
 	fwrite($file, "\n=========================");
@@ -31,7 +32,6 @@ if ( !isset($_REQUEST['username'], $_REQUEST['name']) || $_REQUEST['name']=="" |
 else if ( !($_REQUEST['position'] == "DR" || $_REQUEST['position'] == "AC") )
 {
 	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE2. ';
-	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));
 	fwrite($file, "\n=========================");
@@ -43,7 +43,6 @@ else if ( !($_REQUEST['position'] == "DR" || $_REQUEST['position'] == "AC") )
 else if( !($_REQUEST['desired']<=10 && $_REQUEST['desired']>=0) )
 {
 	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE3';
-	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));
 	fwrite($file, "\n=========================");
@@ -55,7 +54,6 @@ else if( !($_REQUEST['desired']<=10 && $_REQUEST['desired']>=0) )
 else if( !($_REQUEST['splitshift']=="Yes" || $_REQUEST['splitshift']=="Maybe" || $_REQUEST['splitshift']=="No") )
 {
 	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE4';
-	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));
 	fwrite($file, "\n=========================");
@@ -67,7 +65,6 @@ else if( !($_REQUEST['splitshift']=="Yes" || $_REQUEST['splitshift']=="Maybe" ||
 else if( !($_REQUEST['dubshift']=="Yes" || $_REQUEST['dubshift']=="Maybe" || $_REQUEST['dubshift']=="No") )
 {
 	echo 'An error has occured. Please <a href=index.php>return</a> to the previous page and try again. Error code: SE5';
-	echo "\n<br/><br/>All the technical details (don't worry about these):<br/>";
 	fwrite($file, "=========================");
 	fwrite($file, "\nDate:" . date("r"));
 	fwrite($file, "\n=========================");
@@ -98,7 +95,7 @@ Submit: <?php echo $submit ?><br />
 <?php
 */
 
-
+echo "<h1>Schedule Access</h1>";
 
 
 switch($submit)
@@ -123,7 +120,7 @@ switch($submit)
 		                pg_query($sql);
 		        }
 		}
-		echo '<br/>Added user<br/>';
+		echo '<br/><h3>Added user</h3><br/>';
 	}//end case
 	break;
 	case "Submit": {
@@ -148,7 +145,7 @@ switch($submit)
 				pg_query($sql);
 			}
 		}
-		echo '<br/>Updated user<br/>';
+		echo '<br/><h3>Updated user</h3><br/>';
 	}//end case
 	break;
 	default: echo "Option error";
@@ -160,7 +157,5 @@ switch($submit)
 
 fclose($file);
 unset($_REQUEST['username']); //Just so it can't be refreshed.
-
+include('footer.php');
 ?>
-</body>
-</html>

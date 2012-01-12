@@ -1,39 +1,75 @@
 <!DOCTYPE html>
-<?php session_start();?>
-<html>
-<head>
-<link rel="stylesheet" type="text/css" href="style.css" />
-</head>
-
-<body>
-<?php
+<?php session_start(); 
 
 include 'connect.php'; //contains the values of the variables $host $dbname $user and $password
-
-
-global $days, $desks;
-$days = array(0 => "Sunday" , 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday"); //Translates day # to name
-$desks = array(" " => " ", "d" => "DHH", "w" => "Wads", "m" => "McNair"); //Translates single letter to Desk name
-
 $con = pg_connect("host='" . $host . "' dbname='" . $dbname . "' user='" . $user . "' password='" . $password . "'");
 if (!$con)
 {
 	die("Could not connect: " .  pg_last_error());
 }
 
+
+if ( isset($_REQUEST['action']) ) {
+	switch ($_REQUEST['action'])
+	{
+		case "delete": 
+			$sql = "DELETE FROM info WHERE pid = '" . $_REQUEST['pid'] . "';";
+			$sql .= "DELETE FROM hours WHERE pid = '" . $_REQUEST['pid'] . "';";
+			pg_query($sql);
+//			echo $sql;
+			$_SESSION['msg'] .= "Deleted user";
+			header('Location: manage.php?option=' . $_REQUEST['option']);
+			exit;
+			break;
+
+		case "clear": //Confirmed clear
+			//pg_query('DELETE FROM hours; DELETE FROM info');
+			$_SESSION['msg'] .= "There you go, it's all gone. I hope you're happy";
+			header('Location: manage.php?option=' . $_REQUEST['option']);
+			exit;
+			break;
+	}
+}
+
+
+
+include('header.php');
+
 ?>
 
-<form action="?" method="post">
-	<select name="option">
-		<option value="ListUsers">List Users</option>
-		<option value="score">Generate Availibility Ranks</option>
-		<option value="GenerateAvail">Generate Master Availability Sheet</option>
-		<option value="place">Place at Desks</option>
-		<option value="schedule">Schedule Deskies</option>
-		<option value="ClearDB">Clear Database</option>
-		<option value="test">Test purposes only</option>
-	</select>
-	<input type = "submit" value="Submit"/>
+
+<?php
+
+
+global $days, $desks;
+$days = array(0 => "Sunday" , 1 => "Monday", 2 => "Tuesday", 3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday"); //Translates day # to name
+$desks = array(" " => " ", "d" => "DHH", "w" => "Wads", "m" => "McNair"); //Translates single letter to Desk name
+
+
+echo "<h1>Scheduling Management</h1>";
+
+
+if ( isset($_SESSION['msg']) ) {
+	echo "<br />" . $_SESSION['msg'];
+	$_SESSION['msg'] = "";
+}
+
+?>
+
+<form action="?" method="get">
+	<p>
+		<select name="option" class="input-text">
+			<option value="ListUsers">List Users</option>
+			<option value="score">Generate Availibility Ranks</option>
+			<option value="GenerateAvail">Generate Master Availability Sheet</option>
+			<option value="place">Place at Desks</option>
+			<option value="schedule">Schedule Deskies</option>
+			<option value="ClearDB">Clear Database</option>
+			<option value="ByHour">Availability by hour</option>
+			<option value="test">Test purposes only</option>
+		</select>
+	<input type = "submit" value="Submit" class="input-submit"/>
+	</p>
 </form>
 <?php
 
@@ -52,33 +88,38 @@ if ( isset($_SESSION['option']) ) {
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
 
-		case "ClearDB": //Clears the database?>
+		case "ByHour": ?>
+			Select the start and end time, and this will display the people who are available to work, sorted by most available. Also, it will include people who can only work part of the shift
+			<br>
+			Also, we're going to make this look better, and offer filter by options..
+			<?php
+			$minhour = 10;
+			$maxhour = 14;
+			$day = 0;
+			$sql = "SELECT pid, rank, hour FROM hours WHERE hour>=" . $minhour . " AND hour<=" . $maxhour . " AND day=" . $day . "ORDER BY hour,pid;";
+			$resource = pg_query($sql);
+			$info = info_array(); //replace this with an SQL join
+			$lasthour = 0; //initialize last hour, so we don't get an isset issue
+			echo "<table><tr>"; //...Ugly. Fix.
+			while ($object= pg_fetch_object($resource) ) {
+				if ($object->hour != $lasthour) //A hack to check if the hour has changed
+					echo "\n</tr><tr><th>" . $object->hour . "</th>";
+				echo "<td class=rank" . $object->rank  . ">" . $info[$object->pid]['name']. $object->hour .  "</td>";
+				$lasthour = $object->hour; //part of the hour change hack
+			}
+			echo "</table></tr>";
+			break;
+
+		case "ClearDB": /*Clears the database*/?>
 			Are you sure you want to clear the ENTIRE database? This means EVERY users data will be gone?<br/>
 			This is serious business. You're going to clear all user info and hours preferences. Are you positive?<br/><br/>
 			Totally positive?<br/><br/><br/><br/>
 			Okay...
-			
-			<form action="manage.php" method="get">
-			<input type = "submit" name="option" value="Clear">
-			</form> <?php
+			<a href="?action=clear&option=ListUsers">Clear</a>
+			<?php
 
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
-
-		case "Clear": //Confirmed clear
-			pg_query('DELETE FROM hours; DELETE FROM info');
-			echo "It's all gone now. It's kind of lonely in here...<br/>";
-			unset($_SESSION['option']);
-			break;
-
-		case "Delete":
-			$pid = $_REQUEST['DeleteUserID'];
-			$sql = "DELETE FROM info WHERE pid = '" . $pid . "';";
-			$sql .= "DELETE FROM hours WHERE pid = '" . $pid . "';";
-			pg_query($sql);
-			echo "Deleted user<br/><br/>";
-			$_SESSION['option'] = "ListUsers";
-			//No break so that it will load users next
 
 		case "ListUsers": //Lists all info in the info table
 				$sql = 'SELECT * from info;';
@@ -91,7 +132,7 @@ if ( isset($_SESSION['option']) ) {
 					echo "<th>" . $value . "</th>";
 				}
 				echo "</tr>\n";
-				
+
 				//Print data
 				foreach($resource as $array){
 					echo "<tr>";
@@ -100,11 +141,7 @@ if ( isset($_SESSION['option']) ) {
 					}
 					echo "<td>"; 
 					?>
-					
-					<form action="manage.php" method="post">
-					<input type="hidden" name="DeleteUserID" value="<?php echo $array['pid'];?>">
-					<input type="submit" name="option" value="Delete">
-					</form>
+					<a class="ico-delete"href="?action=delete&option=ListUsers&pid=<?php echo $array['pid'];?>">Delete</a>
 
 					<?php
 					echo "</tr>\n";
@@ -113,6 +150,7 @@ if ( isset($_SESSION['option']) ) {
 
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
+
 		case "GenerateAvail":
 			if (isset($_REQUEST['DeskEdit']) ){ //Need a better way to implement this than posting back and checking
 				$desk = $_REQUEST['desk']; //array $desk[$pid] = desk preference
@@ -125,6 +163,33 @@ if ( isset($_SESSION['option']) ) {
 			}
 			$hours = hours_array();
 			$info = info_array();
+
+
+			//-----------------
+			//Generate CSV
+			//-----------------
+			$file_location = "files/master.csv"; //Location to save the file to
+			$file = fopen($file_location,"w");
+			fwrite($file, ',,,');
+			foreach($days as $value) {
+				fwrite($file, '"' . $value . '",');
+			}
+			fwrite($file, "\nOpening,Name,Desk,\n");
+			for($hour=8;$hour<=21;$hour++) { //Loop from 8:00 to 21:00
+				foreach ($info as $pid=>$value) { 	//Pull rows from $info (to access pid name and desk
+					fwrite($file, $hour . '-' . ($hour+1) . ','); //Write the shift label for each row
+					fwrite($file, $info[$pid]['name'] . ',' . $desks[$info[$pid]['desk']] . ','); //Name and desk (using the value of desk from info as the index of desks)
+					for($day=0;$day<=6;$day++) { //Loop Sunday (0) through Saturday (6)
+						fwrite($file, $hours[intval($pid)][$day][$hour] . ',');
+					}
+					fwrite($file, "\n");
+				}
+			}
+			fclose($file);
+			echo "<a href=" . $file_location . ">Download CSV</a>"; //Offers the link for download
+
+
+
 			//-----------------
 			//Create the tables
 			//-----------------
@@ -136,8 +201,6 @@ if ( isset($_SESSION['option']) ) {
 				<tr> <td>Opening</td><td>Name</td><td/><td>Desk</td><td/><td/><td/><td/><td/><td/><td/></tr>
 				<?php
 				for($hour=8;$hour<=21;$hour++) {
-					$sql = "SELECT * from info ORDER BY desk, name";
-					$resource = pg_query($sql);
 					foreach ($info as $pid=>$value) {
 						echo '<tr><td>' . $hour . '-' . ($hour+1) . '</td>';
 						echo '<td class="pos' . $info[$pid]['position']  . '">' . $info[$pid]['name'] . '</td>' . '<td>';
@@ -156,17 +219,15 @@ if ( isset($_SESSION['option']) ) {
 
 			<td valign="top"><table border=1> <?php /*Second table. Holds user and desk info*/?>
 			<form action="manage.php" method="post"> <?php /*Form for editing desk placement*/
-				$sql = "SELECT * from info ORDER BY desk, name";
-				$resource = pg_query($sql);
-				while (	$array = pg_fetch_object($resource) ) {
-					echo '<tr><td class="pos' . $array->position  . '">' . $array->name ?> </td>
-                                        <td><select name=<?php echo '"desk[' . $pid  . ']"'?>> <br/>
-                                                        <option value="" <?php if($array->desk=="") echo 'selected'?>></option>
-                                                        <option value="d" <?php if($array->desk=="d") echo 'selected'?>>DHH</option>
-                                                        <option value="w" <?php if($array->desk=="w") echo 'selected'?>>Wads</option>
-                                                        <option value="m" <?php if($array->desk=="m") echo 'selected'?>>McNair</option>
-
+				foreach ($info as $pid=>$value) {
+					echo '<tr><td class="pos' . $info[$pid]['position'] . '">' . $info[$pid]['name'] ?> </td>
+					<td><select name=<?php echo '"desk[' . $pid . ']"'?>> <br/>
+						<option value="" <?php if($info[$pid]['desk']=="") echo 'selected'?>></option>
+						<option value="d" <?php if($info[$pid]['desk']=="d") echo 'selected'?>>DHH</option>
+						<option value="w" <?php if($info[$pid]['desk']=="w") echo 'selected'?>>Wads</option>
+						<option value="m" <?php if($info[$pid]['desk']=="m") echo 'selected'?>>McNair</option>
 					</select>
+
 
 					</td></tr>
 				<?php } ?>
@@ -178,7 +239,7 @@ if ( isset($_SESSION['option']) ) {
 
 		case "score":
 			average_rank(); //Gather the average rank for each user and store it in the info table
-			echo "<br/>Scheduling Scores have been updated.<br/>";
+			echo "<br/><h4>Scheduling Scores have been updated.</h4><br/>";
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
 
@@ -186,16 +247,17 @@ if ( isset($_SESSION['option']) ) {
 			average_rank();
 			$info = info_array();
 			desk_place($info);
-			echo "<br/>Deskies have been placed.<br/>";
+			echo "<br/><h4>Deskies have been placed.</h4><br/>";
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
 			break;
 
 		case "schedule":
+			average_rank();			
 			?>
 			<form action="manage.php" method="get">
-			<input type = "submit" name="option" value="Schedule Wads">
-			<input type = "submit" name="option" value="Schedule DHH">
-			<input type = "submit" name="option" value="Schedule McNair">
+			<input type = "submit" name="option" value="Schedule Wads" class="input-submit">
+			<input type = "submit" name="option" value="Schedule DHH" class="input-submit">
+			<input type = "submit" name="option" value="Schedule McNair" class="input-submit">
 			</form> 
 			<?php
 		break;
@@ -226,23 +288,6 @@ function average_rank()
 			$sql = "UPDATE info SET srank ='" . $array->average . "' WHERE pid='" . $array->pid . "'";
 			pg_query($sql);
 	}
-/*	$hours = hours_array();
-	foreach($hours as $pid=>$array1){
-		$totalrank = 0;
-		$shifts = 0;
-		foreach($array1 as $day=>$array2){
-			foreach($array2 as $hour=>$rank){
-				$totalrank += $rank;
-				$shifts++;
-			}
-		}
-		$average = intval(100*$totalrank/$shifts);
-
-
-
-	}
-*/
-
 }
 
 
@@ -287,11 +332,11 @@ function info_array()
 //Loops placing Wads => McNair => DHH
 function desk_place($info)
 {
-	//Pull out array $desk_ar from $info
+	//Pull out array $srank_ar from $info
 	foreach ($info as $key => $row) {
 		$srank_ar[$key] = $row['srank'];
 	}
-	array_multisort($srank_ar, SORT_DESC, $info);
+	array_multisort($srank_ar, SORT_DESC, $info); //apply same order resulting from sorting ranks high to low to info
 
 	$count = 3;
 	$desks = array("w", "m", "d");
@@ -309,6 +354,9 @@ function desk_place($info)
 
 function schedule_desk($desk) //Takes input $desk, for which desk to schedule, and attempts to generate a schedule
 {
+
+	$mailhour = 12; //What time mailshift should be
+
 	average_rank();
 	//--------------
 	//Select only deskies at this desk
@@ -373,6 +421,12 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 			$dayhour = $day*100 + $hour; //Allows me to use it as an index and sort by rank.. Hack, but I don't know a better non-complicated way
 			$difficulty[$dayhour] = $average;
 		}
+
+		//Add hour of 25 and 26 for wads mail shift, except sunday equal to $difficulty[$dayhour] where hour = 12 and 1 respectively
+		if ($day > 0 && $desk == "w") {	//day is not sunday
+			$difficulty[($day*100 + 25)] = $difficulty[($day*100+$mailhour)]; //diff of mailshift for that day = diff of mailhour that day
+		}
+
 	}
 	asort($difficulty); //Sort from lowest rank to highest
 	//$dayhour/100 = $day  $dayhour%100 = $hour
@@ -389,14 +443,19 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		//Rank person's ability to cover
 		//--------------
 		foreach ($info as $pid => $value){ //Each $pid of deskie in this desk
-			$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . $hour . ";";
+
+			//if $hour = 25 (mail shift), select the rank for the $mailhour
+			if ($hour == 25) 
+				$hour_sel = $mailhour;
+			else
+				$hour_sel = $hour;
+
+			$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . $hour_sel . ";";
 			$shift_rank1 = pg_fetch_result(pg_query($sql),0,0); //Gets the rank of shift for $pid
 
-			//2 hour blocks
-			$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . ($hour+1) . ";";
+			//2 hour blocks.
+			$sql = "SELECT rank FROM hours WHERE pid=" . $pid . " AND day=" . $day . " AND hour=" . ($hour_sel+1) . ";";
 			$shift_rank2 = pg_fetch_result(pg_query($sql),0,0); //Gets the rank of shift for $pid. 
-			
-//			echo "<br/>" . $dayhour . " " . $info[$pid]['name'] . " " . $shift_rank1 . " " . $shift_rank2 . "<br/>";
 
 			if (intval($shift_rank1) < intval($shift_rank2)) //Takes the lowest of the two ranks. Intval makes c and o equal zero
 				$shift_rank = $shift_rank1;
@@ -431,7 +490,13 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		}
 
 		else{
-			echo "Couldn't cover " . $days[$day] . " at " . $hour . ":00<br/>";?>
+			//If 25, it is a mail shift, and should be labeled as such.
+			if ($hour == 25)
+				echo "Couldn't cover " . $days[$day] . " mail shift at " . $mailhour . ":00<br/>";
+			else
+				echo "Couldn't cover " . $days[$day] . " at " . $hour . ":00<br/>";
+
+?>
 			<div id="shift_ranks">
 				<table class="table1">
 				<?php
@@ -492,6 +557,22 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 		}
 		echo "</tr>";
 	}
+	
+	//For the mailshift, yo
+	$hour = 25;
+	echo "<tr><td>Mailshift</td>";
+	for($day=0;$day<=6;$day++){
+		if ( isset($schedule[$day][$hour]) ){
+			$sql = "SELECT rank FROM hours WHERE pid=" . $schedule[$day][$hour] . " AND day=" . $day . " AND hour=" . $mailhour . ";";
+			$rank = pg_fetch_result(pg_query($sql),0,0); //Gets the rank of shift for $pid
+			echo '<td class="rank' . $rank . '">' . $info[$schedule[$day][$hour]]['name'] . "</td>";
+		}
+		else
+			echo "<td>----</td>";
+	}
+	echo "</tr>";
+
+
 	echo "</table>\n";
 	echo "<div class=\"hours_table\"><table>\n<tr><th>Name</th><th>Hours Given</th><th>Hours Desired</th></tr>\n";
 	foreach($info as $array)
@@ -531,6 +612,5 @@ function schedule_desk($desk) //Takes input $desk, for which desk to schedule, a
 	echo "<div class\"down_link\"><a href=" . $file_location . ">Download CSV</a></div>"; //Offers the link for download
 }//end function
 
+include('footer.php');
 ?>
-</body>
-</html>
