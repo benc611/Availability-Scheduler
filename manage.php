@@ -65,7 +65,6 @@ if ( isset($_SESSION['msg']) ) {
 			<option value="place">Place at Desks</option>
 			<option value="schedule">Schedule Deskies</option>
 			<option value="ClearDB">Clear Database</option>
-			<option value="ByHour">Availability by hour</option>
 			<option value="test">Test purposes only</option>
 		</select>
 	<input type = "submit" value="Submit" class="input-submit"/>
@@ -86,28 +85,6 @@ if ( isset($_SESSION['option']) ) {
 				echo $array->pid . "<br/>";
 			}
 			unset($_SESSION['option']); //Unsets the option variable so that a refresh will not repeat the action
-			break;
-
-		case "ByHour": ?>
-			Select the start and end time, and this will display the people who are available to work, sorted by most available. Also, it will include people who can only work part of the shift
-			<br>
-			Also, we're going to make this look better, and offer filter by options..
-			<?php
-			$minhour = 10;
-			$maxhour = 14;
-			$day = 0;
-			$sql = "SELECT pid, rank, hour FROM hours WHERE hour>=" . $minhour . " AND hour<=" . $maxhour . " AND day=" . $day . "ORDER BY hour,pid;";
-			$resource = pg_query($sql);
-			$info = info_array(); //replace this with an SQL join
-			$lasthour = 0; //initialize last hour, so we don't get an isset issue
-			echo "<table><tr>"; //...Ugly. Fix.
-			while ($object= pg_fetch_object($resource) ) {
-				if ($object->hour != $lasthour) //A hack to check if the hour has changed
-					echo "\n</tr><tr><th>" . $object->hour . "</th>";
-				echo "<td class=rank" . $object->rank  . ">" . $info[$object->pid]['name']. $object->hour .  "</td>";
-				$lasthour = $object->hour; //part of the hour change hack
-			}
-			echo "</table></tr>";
 			break;
 
 		case "ClearDB": /*Clears the database*/?>
