@@ -1,6 +1,6 @@
 This program is being created for the Housing and Residential Life Department of Michigan Technological University
 It is for use by the Assistant Coordinators and the Desk Coordinator of the Reception Desks at Douglass Houghton Hall, Wadsworth Hall and McNair Hall.
-
+ 
 This program allows a user to input schedule preferences and information, which is then stored in a postgres database
 The program also allows a manager (The ACs or the DC) to view the users and info, generate schedules for the desk, a master availability sheet, and export the schedules to a csv file.
 
@@ -10,3 +10,6 @@ Assumes you have a database with two tables:
 
 'info' with columns
 'pid' 'username' 'name' 'position' 'desired' 'split' 'dub' 'desk' 'srank'
+
+
+Test
