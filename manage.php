@@ -93,9 +93,9 @@ if ( isset($_SESSION['option']) ) {
 			<br>
 			Also, we're going to make this look better, and offer filter by options..
 			<?php
-			$minhour = 10;
-			$maxhour = 14;
-			$day = 0;
+			$minhour = 14;
+			$maxhour = 16;
+			$day = 2;
 			$sql = "SELECT pid, rank, hour FROM hours WHERE hour>=" . $minhour . " AND hour<=" . $maxhour . " AND day=" . $day . "ORDER BY hour,pid;";
 			$resource = pg_query($sql);
 			$info = info_array(); //replace this with an SQL join
