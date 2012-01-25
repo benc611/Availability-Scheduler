@@ -10,6 +10,3 @@ Assumes you have a database with two tables:
 
 'info' with columns
 'pid' 'username' 'name' 'position' 'desired' 'split' 'dub' 'desk' 'srank'
-
-
-Test
