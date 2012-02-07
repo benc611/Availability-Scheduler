@@ -37,7 +37,7 @@
 
 <?php
 //permissions management
-$management=1;
+$management=on_manage();
 
 ?>
 
@@ -58,7 +58,7 @@ $management=1;
 
 		</p>
 
-		<p class="f-right">User: <strong><a href="#">Administrator</a></strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong><a href="#" id="logout">Log out</a></strong></p>
+		<p class="f-right">User: <strong><a href="#">User</a></strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong><a href="logout.php" id="logout">Log out</a></strong></p>
 
 	</div> <!--  /tray -->
 
@@ -89,13 +89,15 @@ $management=1;
 				echo "<li "; if ($curr_page=="index.php") echo "id=\"submenu-active\""; echo "><a href=\"index.php\">Schedule</a></li>";
 				echo "<li "; if ($curr_page=="status.php") echo "id=\"submenu-active\""; echo "><a href=\"status.php\">Status</a></li>";
 				if ($management) {
-					echo "<li "; if ($curr_page=="manage.php") echo "id=\"submenu-active\""; echo "><a href=\"manage.php\">Manage</a></li>";
+
+					echo "<li "; if (on_manage()) echo "id=\"submenu-active\""; echo "><a href=\"manage.php\">Manage</a></li>";
 					echo "	<ul>";
-					echo "		<li><a href=\"manage.php?option=ListUsers\">List Users</a></li>";
-					echo "		<li><a href=\"manage.php?option=GenerateAvail\">Master Availability Sheet</a></li>";
-					echo "		<li><a href=\"manage.php?option=place\">Place Deskies at Desks</a></li>";
-					echo "		<li><a href=\"manage.php?option=schedule\">Schedule Deskies</a></li>";
-					echo "		<li><a href=\"manage.php?option=ClearDB\">Clear Database</a></li>";
+					echo "		<li><a href=\"list.php\">List Users</a></li>";
+					echo "		<li><a href=\"master.php\">Master Availability Sheet</a></li>";
+					echo "		<li><a href=\"place.php\">Place Deskies at Desks</a></li>";
+					echo "		<li><a href=\"schedule.php\">Schedule Deskies</a></li>";
+					echo "		<li><a href=\"ClearDB.php\">Clear Database</a></li>";
+					echo "		<li><a href=\"byhour.php\">By Hour</a></li>";
 					echo "	</ul>";
 				}
 				?>
@@ -107,3 +109,18 @@ $management=1;
 
 		<!-- Content (Right Column) -->
 		<div id="content" class="box">
+
+
+<?php
+
+
+function on_manage()
+{
+	$page = basename($_SERVER["SCRIPT_NAME"]);
+	if ($page == "manage.php" || $page == "list.php" || $page == "byhour.php" || $page == "cleardb.php" || $page == "master.php" || $page == "place.php" || $page == "schedule.php")
+		return true;
+	else
+		return false;
+}
+
+?>

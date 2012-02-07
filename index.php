@@ -80,6 +80,7 @@ if (!$con)
 
 echo "<h1>Schedule Access</h1>";
 
+
 //Displayed if no input yet
 if (!isset($_REQUEST['u'])){
 /*Check to see if the user already exists*/?>
