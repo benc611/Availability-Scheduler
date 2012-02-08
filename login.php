@@ -9,7 +9,7 @@ $_SESSION['debug'] = TRUE;
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
-//Credit for most of the code in this section goes to DJ Cole. This is adapated from his iCos ISO login script
+//Credit for the code in this section goes to DJ Cole. This is adapated from his iCos ISO login script
 
 if ( isset($_SESSION['msg']) ) {
 	echo "<br />" . $_SESSION['msg'];
