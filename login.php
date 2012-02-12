@@ -1,9 +1,9 @@
 
 <?php session_start(); 
 
-include('header.php');
+//include('header.php');
 
-echo "<h1>Login</h1>";
+//echo "<h1>Login</h1>";
 
 $_SESSION['debug'] = TRUE;
 
@@ -49,19 +49,18 @@ $mtuiso['delport'] = '0';
 $mtuiso['https'] = FALSE;
 
 
-//NEED A COMMENT HERE
-///
+
 if (isset($_SESSION['MTUISODN']))
 {
 	if ($_SESSION['MTUISODN'])
 		header("Location: dhh-236-13.resnet.mtu.edu" . $_SESSION['return']);
 }	
 					
-if (isset($_REQUEST['cookie']))
+if (isset($_COOKIE['ORBGLB']))
 {
-	echo "test";
-	$crumbs =  base64_decode($_REQUEST['cookie']);
+	$crumbs =  $_COOKIE['ORBGLB'];
 
+setcookie ("ORBGLB", "", time() - 3600,"","mtu.edu");
 
 	if ($crumbs){ //cookie set succesfully
 
@@ -94,7 +93,7 @@ if (isset($_REQUEST['cookie']))
 
 			if ($isoun){	 
 			
-				$pub_key[0] = './mtuca.crt';   
+				$pub_key[0] = '/var/www/availability/themed/mtuca.crt';   
 				
 				$iso_cert = openssl_x509_read($crumbs);			
 				
@@ -108,8 +107,9 @@ if (isset($_REQUEST['cookie']))
 				}	
 				
 			
-				
-				if ($verify === 1){	
+				if (TRUE == TRUE) {
+				//Just not verifying the cert for now
+				//if ($verify === 1){	
 				
 					if ( $_SESSION['debug'] === TRUE ){
 				
@@ -118,7 +118,7 @@ if (isset($_REQUEST['cookie']))
 						
 					}	
 				
-					 	if (TRUE == TRUE){
+					if (TRUE == TRUE){
 					
 						if ( $_SESSION['debug'] === TRUE ){
 			
@@ -132,8 +132,10 @@ if (isset($_REQUEST['cookie']))
 						$_SESSION['MTUISODN'] = trim($isoun);
 						$_SESSION['MTUPIDM'] = trim($pidm);
 						
-						header("Location: https://secure.icospro.com"  . $_SESSION['return']);
-					}else{
+						header("Location: https://dhh-236-13.resnet.mtu.edu/availability/themed"  . $_SESSION['return']);
+					}
+
+					else{
 					
 						// being here means that cross check failed		
 						
@@ -147,7 +149,8 @@ if (isset($_REQUEST['cookie']))
 					}	
 					
 					
-				}else{ 
+				}
+				else{ 
 				 			// Getting here means that there is something wrong with the certificate
 						if ( $_SESSION['debug'] === TRUE ){
 			
@@ -242,9 +245,9 @@ else{
 			
 			$back .= $_SERVER['REQUEST_URI'];
 
-			$uri .= '&back=http://dhh-236-13.resnet.mtu.edu/availability/themed/test.php'; 
+			$uri .= '&back=http://dhh-236-13.resnet.mtu.edu/availability/themed/login.php'; 
 			
-			//header('Location:' . $uri);	
+			header('Location:' . $uri);	
 			
 			exit; 
 		}
@@ -255,5 +258,5 @@ else{
 	}
 }
 
-include('footer.php');
+//include('footer.php');
 ?>
