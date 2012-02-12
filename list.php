@@ -38,7 +38,6 @@ if ( isset($_SESSION['msg']) ) {
         $_SESSION['msg'] = "";
 }
 
-echo '<a href="manage.php">Return</a>';
 
 $sql = 'SELECT * from info;';
 $resource = pg_fetch_all(pg_query($sql));

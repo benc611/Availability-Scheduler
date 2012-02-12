@@ -22,7 +22,7 @@ if ( isset($_REQUEST['action']) ) {
 
 
 include('header.php');
-include('functions.php')
+include('functions.php');
 
 
 echo "<h1>Scheduling Management</h1>";
@@ -37,8 +37,6 @@ if ( isset($_SESSION['msg']) ) {
 
 ?>
 
-
-<a href="manage.php">Return</a>
 
 
 Are you sure you want to clear the ENTIRE database? This means EVERY users data will be gone?<br/>

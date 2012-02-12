@@ -28,8 +28,6 @@ if ( isset($_SESSION['msg']) ) {
 
 ?>
 
-<a href="manage.php">Return</a>
-
 <form action="?" method="get">
 	<input type = "submit" name="option" value="Schedule Wads" class="input-submit">
 	<input type = "submit" name="option" value="Schedule DHH" class="input-submit">

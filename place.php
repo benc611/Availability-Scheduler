@@ -23,11 +23,6 @@ if ( isset($_SESSION['msg']) ) {
 }
 
 
-?>
-
-<a href="manage.php">Return</a>
-
-<?php
 
 average_rank();
 $info = info_array();

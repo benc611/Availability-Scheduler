@@ -9,7 +9,7 @@ if (!$con)
 }
 
 include('header.php');
-include('functions.php')
+include('functions.php');
 
 
 echo "<h1>Scheduling Management</h1>";
@@ -24,8 +24,6 @@ if ( isset($_SESSION['msg']) ) {
 
 ?>
 
-
-<a href="manage.php">Return</a>
 
 
 <br>

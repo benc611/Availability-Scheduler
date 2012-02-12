@@ -22,13 +22,6 @@ if ( isset($_SESSION['msg']) ) {
 }
 
 
-?>
-
-<a href="manage.php">Return</a>
-
-<?php
-
-
 
 
 //Allow editing desk
