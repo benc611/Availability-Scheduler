@@ -10,9 +10,3 @@ Assumes you have a database with two tables:
 
 'info' with columns
 'pid' 'username' 'name' 'position' 'desired' 'split' 'dub' 'desk' 'srank'
-<<<<<<< HEAD
-=======
-
-
-Test3
->>>>>>> 6f98e560429a32a400e9821fafac8c7b5b4e4a41
