@@ -25,39 +25,28 @@ include('header.php');
 
 
 <br/>
-Management Page Tasks:
+Management Tasks:
 <ul>
 	<li>Completed<ul>
 		<li>Delete user option in list users</li>
-		<li>Scheduler Linked</li>
+		<li>Clear database page</li>
+		<li>List users page</li>
+		<li>Schedule Page</li>
+		<li>Master availability page</li>
+		<li>Place at desks page</li>
+		<li>Availability by hour page</li>
+		<li>Make it pretty</li>
 	</ul></li>	
 
 	<li>To do<ul>
-		<li>Last modified value on deskie info</li>
-		<li>Validate all button?</li>
+		<li>Last modified value on deskie info (rails does this automatically, switch!)</li>
 		<li>Login/security</li>
 		<li>Fix sort by desk (Works, hacked together, not best solution)</li>
 		<li>Place at desk: Max at desk. Is a DR? Check algorithm</li>
-		<li>Availability by shift page</li>
-
+		<li>Replace using arrays on master availability sheet with better SQL, and objects</li>
+		<li>Find other places to improve SQL, remove arrays</li>
 	</ul></li>
 </ul>
-
-<br/>
-Availability By Hour Page Tasks:
-<ul>
-	<li>Completed<ul>
-		<li>Gather username by hour</li>
-		<li>Print table by hour with box colored by rank</li>
-	</ul></li>
-
-	<li>To do<ul>
-		<li>Optimize, joins, objects, no info table</li>
-		<li>Allow user input... AJAX</li>
-		<li>Make it not look like crap</li>
-	</ul></li>
-</ul>
-
 
 <br/>
 Scheduler Tasks:
@@ -92,6 +81,7 @@ Scheduler Tasks:
 		<li>Reserve shifts (ACs)</li>
 		<li>Check if something should be run first</li>
 		<li>Think of a less hack-y way to do wads mail shift</li>
+		<li>Fix SQL queries to be more efficient, replace arrays with objects, fix logic in general</li>
 	</ul></li>	
 </ul>
 
@@ -116,9 +106,9 @@ Etc Tasks:
 	</ul></li>	
 
 	<li>To do<ul>
-		<li>Availability by hour. Desk and global</li>
 		<li>More optimization/fix crappy bits</li>
-		<li>Switch most arrays over to objects, use joins rather than hour and info tables</li>
+		<li>Switch to Ruby on Rails</li>
+		<li>There may be a better way to organize the database (especially to line up with the way ruby on rails works)</li>
 	</ul></li>	
 </ul>
 
